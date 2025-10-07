@@ -179,3 +179,121 @@ process CamionTRIGO {
 
 
 }
+
+
+
+
+
+11 hecho en la libreta
+
+
+12 12.Simular la atención en una Terminal de Micros que posee 3 puestos para hisopar a 150
+pasajeros. En cada puesto hay una Enfermera que atiende a los pasajeros de acuerdo con orden llegada al mismo. Cuando llega un pasajero se dirige al Recepcionista, quien le indica qué puesto es el que tiene menos gente esperando. 
+Luego se dirige al puesto y espera a que la enfermera correspondiente lo llame para hisoparlo.
+ Finalmente, se retira.
+a) Implemente una solución considerando los procesos Pasajeros, Enfermera y
+Recepcionista.
+b) Modifique la solución anterior para que sólo haya procesos Pasajeros y Enfermera,
+siendo los pasajeros quienes determinan por su cuenta qué puesto tiene menos
+personas esperando.
+Nota: suponga que existe una función Hisopar() que simula la atención del pasajero por
+parte de la enfermera correspondiente.
+
+int N = 150
+int P = 3
+Cola colaGeneral
+Cola<Int>[] arrayColas = ([P], int Cola())
+sem[] indicado =([N], 0)    //esperando haberse indicado  supuesto
+sem mutex = 1.      // mutex Cola general
+sem[] mutexColaP =([P], 1)  //mutex colas de Puestos
+sem[] pacienteEnCola =([P], 0) //despertarEnfermera
+sem[] irse =([N], 0)            //termino
+sem[] atencion =([N], 0)        //esperandoSerHisopado
+
+sem recepcion = 0 //despertar recepcionista
+process Pasajero(id= 0..N-1){
+    //llega al recepcionista
+    P(mutex)
+    colaGeneral.push(id)
+    V(mutex)
+    V(recepcion)
+    P(indicado[id])
+
+    //se dirije al puesto de vacunacion
+    V(paciente_cola[puesto_indicado])
+    P(atencion[id])
+    P(irse[id])
+}
+
+process Recepcionista{
+    for i= 1..150
+        P (recepcion)
+        P(mutex)
+        recepAct = colaGeneral.pop()
+        v(mutex)
+        //calcula el puesto con menos fila
+        indicado = id_puesto_calculado
+        P(mutexColaP[indicado])
+        array_colas[puesto_indicado].push(recepAct)
+        V(mutexColaP[indicado])
+
+        V(indicado[id])
+
+}
+
+process Enfermera(id= 0..P-1){
+    while(true)
+        P(paciente_cola[id])
+        P(mutexColaP[id])
+        actual = arrayColas[id].pop()
+        V(mutexColaP[id])
+        V(atencion[actual])
+        hisoparPaciente(actual)
+        V(irse[actual])
+        
+
+}
+
+
+
+b)Modifique la solución anterior para que sólo haya  rocesos Pasajeros y Enfermera, siendo los pasajeros quienes determinan por su cuenta qué puesto tiene menos personas esperando.
+
+P = 3
+N = 150
+int[] filas = ([P],0)
+sem[] mutexColas = ([P],1)
+Cola[] colas
+sem[] hisopado = ([N],0)
+sem[] retirarse = ([N],0)
+
+process Pasajero (id= 0..N-1){
+    //llega
+    P(mutexEncolarse)
+    int filaIndicada = min(filas)
+    filas[filaIndicada] += 1
+    V(mutexEncolarse)
+    P(mutexColas[filaIndicada])
+    colas[filaIndicada].push(id)
+    V(mutexColas[filaIndicada])
+
+    //va hacia el puesto
+    V(esperaPuesto[fila])
+    P(hisopado[id])
+    //es hisopado
+    P(retirarse[id])
+}
+
+process Enfermera (id = 0..P-1){
+    while(true)
+        P(esperaPuesto[id])
+        P(mutexColas[id])
+        actual = colas[P].pop()
+        V(mutexColas[id])
+        P(mutexEncolarse)
+        salas[id] -= 1
+        V(mutexEncolarse)
+        V(hisopado[actual])
+        Hisopar(actual)
+        V(retirarse[actual])
+
+}
