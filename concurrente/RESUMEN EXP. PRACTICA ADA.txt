@@ -1,0 +1,54 @@
+RESUMEN EXP. PRACTICA ADA.
+Las tareas pueden ( O NO ) exportar operaciones. En caso de hacerlo, deben definir los ENTRYs correspondientes a cada operacion
+
+
+Task is
+
+Task type es el tipo de tarea, ahi defino las que en algun momento voy a instanciar. No se puede comunicar con este, ni pedirle algo, ya que eso lo haré con alguna  INSTANCIA de ellos.
+
+TASK BODY 
+Es el body de cada una de las tareas y los tipos que hemos implementado.
+Lo que van a hacer cada una de las instancias.
+
+* En la especificacion unicamente van los ENTRYEs. la forma en la que son llamdas esas operaciones exportadas. NO va la delcaracion de NADA. Solamente los ENTRY que va a tener ese tipo tarea.
+
+Sincronizacion: A traves del CALL y ACCEPT de un ENTRY. Bloqueante hasta que finalice la ejecucion/"resolucion" de ese "pedido". Eso se debe aprovechar bien. Si hiciese mas de un llamado... Se trataria basicamente de hacer PMS.
+
+
+ 
+3 formas de hacer ENTRY CALL:
+
+*1) SIMPLE: La ejecucion se demora en ese punto hasta la resolucion.
+
+*2) CONDICIONAL (SELECT-ELSE): No espera a que le acepten el pedido: Si la otra tarea no está lista (para hacer el accept) cancela su pedido, no se demora y realiza otra cosa. Si estaba listo (SE LE DEBE ACEPTAR INMEDIATAMENTE )si se ejecuta y bloquea hasta que termine. 
+
+*3) TEMPORAL (SELECT - OR DELAY): Espera A LO SUMO un detemrinado tiempo para que la otra tarea realice el accept a su pedido. Pasado el tiempo cancela el call y pasa a otra cosa.
+
+
+* Se puede usar NULL para poner una sentencia que no hace nada. Es para completar las estructuras de control, en las que tiene que haber una sentencia si o si.
+
+
+
+Por cada CALL ENTRY se debe hacer al menos un ACCEPT para cada entry especificada en su declaracion.
+Cada entry tiene una COLA de PEDIDOS implicita.
+Un accept Puede (O NO) tener un cuerpo. Durante este dura la sincronizacion.
+SI NO TIENE CUERPO: La sincronizacion (bloqueo) termina instantaneamente y cada una sigue su ejecucion.
+Puede o no tener parametros.
+HABITUALMENTE: -Si no tiene parametros se lo usa para sincronizacion por condicion
+		-Si tiene parametros es para que realice una operacion
+
+
+
+
+------------------------------------------------------------------------------------------------------------
+WAIT SELECTIVOS con COMUNICACION GUARDADA: 
+clausula WHEN: Permite tener varias alternativas de ACCEPT, pudiendo (o no) tener asociada una condicion booleana (no pueden utilizar los parametros del entry como parte de la condicion).
+
+
+Tambien hay ELSE, OR DELAY para los accept.
+
+
+-----------------------------------------------------------------------------
+Aquella tarea que puede hacer ACCEPT sobre un ENTRY, tiene acceso al COUNT de un ENTRY, para conocer la cantidad de pedidos pendientes encolados.
+Habitualmente se usa o puede ser utilizado en los WHEN para manejar prioridades entre ENTRYs.
+NO tiene SENTIDO usarlo en el WHEN a modo de "saber si hay algo que atender". Podria producir BUSY WAITING
