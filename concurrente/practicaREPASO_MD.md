@@ -1,8 +1,8 @@
 link con otras respuestas, de otra persona, para revisar
 https://www.notion.so/mbvstuff/Pr-ctica-de-Repaso-MD-2a3423c1987a80f880b5f826b643b803
 
-link con otras respuestas, de otra persona, para revisar
-https://www.notion.so/mbvstuff/Pr-ctica-de-Repaso-MD-2a3423c1987a80f880b5f826b643b803
+link de guaymas:
+https://github.com/MatiasGuaymas/PC/blob/main/Resoluciones/Practica-Repaso-MD.md
 
 # Pasaje de mensajes
 ## Ejercicio 1
@@ -309,5 +309,169 @@ end BancoCentral;
 
 ## Ejercicio 2
 
+Resolver el siguiente problema. En un negocio de cobros digitales hay P personas que deben pasar por la única caja de cobros para realizar el pago de sus boletas.
+Las personas son atendidas de acuerdo con el orden de llegada, teniendo prioridad aquellos que deben pagar menos de 5 boletas de los que pagan más.
+Adicionalmente, las personas ancianas tienen prioridad sobre los dos casos anteriores.
+Las personas entregan sus boletas al cajero y el dinero de pago; el cajero les devuelve el vuelto y los recibos de pago.
+
+TASK Cajero is 
+    ENTRY atencionAnciano(boletas in:List<Boleta>, dinero in:real, vuelto out:real, recibo out:Recibo);
+    ENTRY atencionRapida(boletas in:List<Boleta>, dinero in:real, vuelto out:real, recibo out:Recibo);
+    ENTRY atencionNormal(boletas in:List<Boleta>, dinero in:real, vuelto out:real, recibo out:Recibo);
+end;
+
+TASK TYPE Persona;
+
+TASK BODY Cajero is:
+Begin
+    for (i =1..P) loop
+    SELECT
+        ACCEPT atencionAnciano(boletas in:List<Boleta>, dinero in:real, vuelto out:real, recibo out:Recibo) do
+            //cobrarle las boletas
+            vuelto = cobrar(boletas, dinero)
+            recibo = emitirRecibo(boletas, dinero, vuelto)
+        end atencionAnciano;            
+
+        WHEN (atencionAnciano'count =0); ACCEPT atencionRapida(boletas in:List<Boleta>, dinero in:real, vuelto out:real, recibo out:Recibo) do
+            //cobrarle las boletas
+            vuelto = cobrar(boletas, dinero)
+            recibo = emitirRecibo(boletas, dinero, vuelto)
+        end atencionRapida;            
+
+        WHEN (atencionAnciano'count =0 && atencionRapida'count =0);  ACCEPT atencionNormal(boletas in:List<Boleta>, dinero in:real, vuelto out:real, recibo out:Recibo) do 
+            //cobrarle las boletas
+            vuelto = cobrar(boletas, dinero)
+            recibo = emitirRecibo(boletas, dinero, vuelto)
+        end atencionNormal;            
+    END SELECT
+    end loop
+end Cajero;
+
+
+
+
+
+
+TASK BODY Persona is:
+    List<Boleta> boletas = prepararBoletas()
+    real dinero = prepararDinero()
+    boolean isAnciano = //lo sabe
+begin
+    if (isAnciano)
+        Cajero.atencionAnciano(boletas, dinero, vuelto, recibo);
+    else (if (boletas.count()<5))
+        Cajero.atencionAnciano(boletas, dinero, vuelto, recibo);
+    else 
+        Cajero.atencionNormal(boletas, dinero, vuelto, recibo);
+    end if;
+end Persona;
+
+
+
+
+
 
 ## Ejercicio 3
+
+Resolver el siguiente problema.
+La oficina central de una empresa de venta de indumentaria debe calcular cuántas veces fue vendido cada uno de los artículos de su catálogo. 
+La empresa se compone de 100 sucursales y cada una de ellas maneja su propia base de datos de ventas.
+La oficina central cuenta con una herramienta que funciona de la siguiente manera: ante la consulta realizada para un artículo determinado, la herramienta envía el identificador del artículo a las sucursales, para que cada una calcule cuántas veces fue vendido en ella. Al final del procesamiento, la herramienta debe conocer cuántas veces fue vendido en total, considerando todas las sucursales. Cuando ha terminado de procesar un artículo comienza con el siguiente (suponga que la herramienta tiene una función generarArtículo() que retorna el siguiente ID a consultar).
+
+ Nota: maximizar la concurrencia. Existe una función ObtenerVentas(ID) que retorna la cantidad de veces que fue vendido el artículo con identificador ID en la base de la sucursal que la llama.
+
+TASK OficinaCentral is
+    ENTRY informarCantVentas(cant in:integer)
+end;
+
+TASK TYPE Sucursal is
+    ENTRY pedirCantVentas(idArticulo in:integer)
+end;
+
+arrSucursales[1..100]:array of Sucursal;
+
+TASK BODY OficinaCentral is:
+    idActual :integer
+begin
+    idActual = generarArticulo()
+    while (idActual<>-1) loop;
+        for (i=1..100) loop
+            arrSucursales[i].pedirCantVentas(idActual);
+        end loop;
+        for (i=1..100) loop
+            ACCEPT informarCantVentas(cant in:integer) do
+                total=total+cant
+            end informarCantVentas;
+        end loop;
+        //informa en pantalla con print() la cantidad del articulo actual
+
+        //pasa al siguiente articulo.
+        idActual = generarArticulo()
+    end loop
+end;
+
+TASK BODY Sucursal is
+    cant: integer;
+    idAct:integer
+begin
+    while (true) loop
+        ACCEPT pedirCantVentas(idArticulo in:integer) do
+            idAct= idArticulo;
+        end pedirCantVentas;
+
+        //se dispone de la funcion:
+        cant = obtenerVentas(idArticulo) //demoraria el tiempo que tarda en contar en su bd.
+        OficinaCentral.informarCantVentas(cant)
+    end loop;
+end Sucursal
+
+
+
+## o la supuesta mejor version, pero tienen que estar las sucursales siempre pidiendo un ID.
+
+
+
+
+TASK OficinaCentral is
+    ENTRY pedirID(idArticulo out:integer)
+    ENTRY informarCantVentas(cant in:integer)
+end;
+
+TASK TYPE Sucursal is
+end;
+
+arrSucursales[1..100]:array of Sucursal;
+
+TASK BODY OficinaCentral is:
+    idActual :integer
+begin
+    idActual = generarArticulo()
+    while (idActual<>-1) loop;
+        total=0
+        for (i=1..200) loop
+        SELECT 
+            ACCEPT pedirId(idArticulo out:integer) do
+                idArticulo = idActual;
+                end pedirId;
+            OR ACCEPT informarCantVentas(cant in:integer) do
+                total=total+cant;
+                end informarCantVentas;
+        END SELECT
+        end loop;
+        //informa en pantalla con print() la cantidad del articulo actual
+        idActual = generarArticulo()       //pasa al siguiente articulo.
+     end loop
+end;
+
+TASK BODY Sucursal is
+    cant: integer;
+    idAct:integer
+begin
+    while (true) loop
+        OficinaCentral.PedirID(idAct);
+        //se dispone de la funcion:
+        cant = obtenerVentas(idArticulo) //demoraria el tiempo que tarda en contar en su bd.
+        OficinaCentral.informarCantVentas(cant)
+    end loop;
+end Sucursal
+
