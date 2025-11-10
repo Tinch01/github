@@ -815,5 +815,30 @@ Nota: cada Espectador una sólo una vez la máquina.
 
 
 process Espectador(idE: 1..E){
-    
+    MAQUINA!.usar(idE)
+    MAQUINA?.turno()
+    //la usa
+    MAQUINA!Liberar()
 }
+
+process Maquina{
+    colaEspera = new Cola()
+    boolean libre=true;
+    while(true){
+        if EMPLEADO[*]?Usar(idE) ->
+            if (libre) {
+                libre =false
+                ESPECTADOR[idE]!turno()
+            } else{
+                colaEspera.push(idE)
+            }
+        [] EMPLEADO[*]?Liberar() ->
+            if colaEspera.vacia(){
+                libre=true
+            }else{
+                EMPLEADO[colaEspera.pop()]!Turno()
+            }
+    }
+
+}
+
