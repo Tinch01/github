@@ -548,3 +548,295 @@ begin
         END SELECT;
     end loop
 end
+
+
+
+
+
+
+
+
+
+
+## Ejercicio 6
+
+En una playa hay 5 equipos de 4 personas cada uno (en total son 20 personas donde cada una conoce previamente a que equipo pertenece). 
+Cuando las personas van llegando esperan con los de su equipo hasta que el mismo esté completo (hayan llegado los 4 integrantes),
+a partir de ese momento el equipo comienza a jugar. 
+El juego consiste en que cada integrante del grupo junta 15 monedas de a una en una playa (las monedas pueden ser de 1, 2 o 5 pesos) 
+y se suman los montos de las 60 monedas conseguidas en el grupo.
+Al finalizar cada persona debe conocer el grupo que más dinero junto. Nota: maximizar la concurrencia.
+Suponga que para simular la búsqueda de una moneda por parte de una persona existe una función Moneda() que retorna el valor de la moneda encontrada.
+
+
+
+
+5 Equipos de
+4 Integrantes X equipo
+
+
+
+TASK Juego is:
+    ENTRY pasarPuntuacion()
+    ENTRY EquipoGanador(idEquipo out:integer)
+
+TASK TYPE Persona is
+    ENTRY AsignarEquipo(equipo in:integer)
+
+TASK TYPE Equipo is
+    ENTRY AsignarNumero(numero in:integer)
+    ENTRY COMENZAR()
+    ENTRY LLEGAR()
+    ENTRY SumarMoneda(mon in:Moneda)
+
+
+
+
+TASK BODY Juego
+max=-1;
+idMax=-1;
+BEGIN
+    for i = 1..5 loop
+        ACCEPT pasarPuntuacion(total in:integer, id in:integer) do
+            if (total>max);
+                idMax =id;
+                max=total;
+            end if
+        end pasarPuntuacion;
+    end loop
+    for 1..20 do loop
+        ACCEPT equipoGanador(idEquipoGanador out:integer) do
+            idEquipoGanador = idMax;
+        end equipoGanador;
+    end loop
+end;
+
+TASK BODY Persona
+    monedas : cola<Moneda>;
+    idEquipoGanador : integer;
+Begin
+    ACCEPT AsignarEquipo(equipo in:integer) do
+        miEquipo = equipo;
+    end asignarEquipo;
+    equipos(miEquipo).LLEGAR();
+    equipos(miEquipo).Comenzar();
+    for i 1..15 loop
+        monedas.push(Moneda())
+    end loop
+    for i 1..15 loop
+        equipos(miEquipo).sumarMoneda(monedas.pop());
+    end loop 
+    Juego.equipoGanador(idEquipoganador);
+END;
+
+TASK BODY Equipo
+    sumEquipo: integer = 0;
+    numeroEquipo: integer;
+BEGIN
+    ACCEPT asignarNumero(num in:integer) do
+        numeroEquipo =num;
+    end asignarNumero;
+    for i =1..4 do 
+        ACCEPT Llegar();
+    end loop;
+    for i =1..4 do 
+        ACCEPT Comenzar();
+    end loop;
+    for i..60 loop
+        ACCEPT sumarMoneda(mon in:Moneda) do
+            sumaEquipo = sumaEquipo + mon;
+        end sumarMoneda
+    end loop;
+    Juego.pasarPuntuacion(sumaEquipo, numeroEquipo);
+END
+
+
+arrPersonas(0..19): array of Persona
+equipos(1..5): array of Equipo
+
+Begin
+    for i 1..5 loop
+        arrEquipos(i).asignarNumero(i); 
+    for i 0..19 loop
+        arrPersonas(i).asignarEquipo((i div 4)+1);
+    end loop;
+
+end;
+
+
+
+## Ejercicio 7
+Se debe calcular el valor promedio de un vector de 1 millón de números enteros que se
+encuentra distribuido entre 10 procesos Worker (es decir, cada Worker tiene un vector de
+100 mil números). Para ello, existe un Coordinador que determina el momento en que se
+debe realizar el cálculo de este promedio y que, además, se queda con el resultado. Nota:
+maximizar la concurrencia; este cálculo se hace una sola vez
+
+TASK COORDINADOR;
+    ENTRY sumarParte(sumaVector integer:in)
+    
+TASK TYPE WORKER is
+end;
+
+TASK BODY coordinador is
+    total integer=0
+    resultado integer;
+BEGIN
+    for i = 1..10 loop
+        ACCEPT sumarParte(sumaVector integer:in) do:
+            total=total+sumaVector;
+        end sumarParte;
+    end loop;
+    resultado = total/10;
+END coordinador;
+
+
+TASK BODY worker is
+    subVector = array(1..100000) of Integer;
+    subTotal : integer=0;
+BEGIN
+    for i = 1..100000 loop
+        subTotal = subTotal + subVector(i);
+    end loop;
+    coordinador.sumarParte(subTotal)
+END worker;
+
+
+
+
+
+## Ejercicio 8
+
+Hay un sistema de reconocimiento de huellas dactilares de la policía que tiene 8 Servidores para realizar el reconocimiento, cada uno de ellos trabajando con una Base de Datos propia;
+a su vez hay un Especialista que utiliza indefinidamente. El sistema funciona de la siguiente manera: 
+El Especialista toma una imagen de una huella (TEST) y se la envía a los servidores para que cada uno de ellos le devuelva el código y el valor de similitud de la huella que más
+se asemeja a TEST en su BD; al final del procesamiento, el especialista debe conocer el código de la huella con mayor valor de similitud entre las devueltas por los 8 servidores.
+Cuando ha terminado de procesar una huella comienza nuevamente todo el ciclo. Nota: suponga que existe una función Buscar(test, código, valor) que utiliza cada Servidor donde
+recibe como parámetro de entrada la huella test, y devuelve como parámetros de salida el código y el valor de similitud de la huella más parecida a test en la BD correspondiente.
+Maximizar la concurrencia y no generar demora innecesaria.
+
+TASK ESPECIALISTA is
+    ENTRY envioResultado(codigo in:integer, valorSimilitud in:integer);
+    ENTRY envioHuella(muestra out:test)
+    ENTRY fin()
+end; 
+
+TASK TYPE SERVIDOR is
+end;
+
+TASK BODY ESPECIALISTA
+begin
+    loop
+        codMaxCoincidente=-1
+        maxValorCoincidente=-1
+        muestra = //tomaMuestra
+        for i: 1..16 loop
+        SELECT 
+            ACCEPT EnvioHuella(test) do
+                test = muestra;
+            end EnvioHuella
+
+        OR ACCEPT envioResultado(codigo in:integer, valorSimilitud in:integer) do
+                if (valorSimilitud > maxValorCoincidente)
+                    maxValorCoincidente = valorSimilitud;
+                    codMaxCoincidente = codigo;
+                end if
+            end envioResultado;
+        end SELECT;
+        end loop;
+        for i:1..8 loop
+            ACCEPT FIN()
+        end loop
+    end loop;
+
+end
+
+
+TASK BODY SERVIDOR
+    muestraActual:Muestra;
+BEGIN
+    loop
+        ESPECIALISTA.envioHuella(test Muestra:in);
+            muestraActual=test;
+        end pedido;
+        //Buscar(muestraActual Test:in, codigo out:integer, valorSimilitud out:integer)
+        ESPECIALISTA.envioResultado(codigo, valorSimilitud)
+        ESPECIALISTA.FIN()
+    end loop;
+END
+    
+    
+
+## Ejercicio 9
+
+
+Una empresa de limpieza se encarga de recolectar residuos en una ciudad por medio de 3 camiones. Hay P personas que hacen reclamos continuamente hasta que uno de los
+camiones pase por su casa. Cada persona hace un reclamo y espera a lo sumo 15 minutos a que llegue un camión; si no pasa, vuelve a hacer el reclamo y a esperar a lo sumo 15
+minutos a que llegue un camión; y así sucesivamente hasta que el camión llegue y recolecte los residuos. Sólo cuando un camión llega, es cuando deja de hacer reclamos y se retira.
+Cuando un camión está libre la empresa lo envía a la casa de la persona que más reclamos ha hecho sin ser atendido. Nota: maximizar la concurrencia.
+
+P Personas
+3 camiiones
+
+TASK TYPE CAMION;
+TASK TYPE PERSONA is
+    ENTRY LIMPIAR();
+    ENTRY AsignarId(id in:integer);
+TASK ORGANIZADOR 
+    ENTRY pedirCamion(idPersona in:integer)
+    ENTRY siguienteLimpieza(idPersona out:integer)
+end;
+
+
+TASK BODY PERSONA
+    fin:boolean;
+    idPersona:integer;
+begin
+    ACCEPT asignarID(id) do
+        idPersona =id;
+    end asignarID;
+    fin=false
+    while (!fin) loop
+        Organizador.pedirCamion(idPersona)
+        SELECT 
+            ACCEPT Limpiar()
+            fin=true;
+        OR DELAY 15min;
+            null;
+    end loop
+end Persona;
+
+TASK BODY ORGANIZADOR
+    reclamos(1..P) of integer;
+BEGIN
+    loop 
+        SELECT
+            ACCEPT pedirCamion(idPersona in:integer) do
+                reclamos[idPersona]++;
+            end pedirCamion;
+            OR ACCEPT siguienteLimpieza(idPersona out:integer) do
+                maxID(reclamos) //trae el id de la posicion del arreglo con valor maximo.
+                reclamos[maxID]=0;
+                idPersona=maxID;
+            end siguienteLimpieza;
+        END SELECT;
+    END loop;
+END;
+
+TASK BODY CAMION
+BEGIN
+    loop 
+        ORGANIZADOR.siguienteLimpieza(idPersona);
+        //ir a limpiar a esa ubicacion.
+        arrPersonas(idPersona).Limpiar();
+    end loop
+end CAMION
+
+
+arrPersonas(1..P):array of Persona
+
+begin
+    for i 1..P loop
+        arrPersonas(i).asignarId(i);
+    end loop;
+end;
